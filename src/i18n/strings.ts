@@ -1,8 +1,8 @@
 export type Lang = 'zhHant' | 'en';
 
-export const LANGS: { key: Lang; label: string }[] = [
-  { key: 'zhHant', label: '繁體中文' },
-  { key: 'en', label: 'English' },
+export const LANGS: { key: Lang; label: string; short: string }[] = [
+  { key: 'zhHant', label: '繁體中文', short: '繁' },
+  { key: 'en', label: 'English', short: 'EN' },
 ];
 
 type Dict = Record<string, { en: string; zhHant: string }>;
@@ -44,6 +44,17 @@ export const STRINGS: Dict = {
   minBuy: { en: 'min.', zhHant: '最少' },
   units: { en: 'pcs', zhHant: '件' },
   minSpend: { en: 'min. spend', zhHant: '最低消費' },
+  minCost: { en: 'Cost to unlock', zhHant: '取得優惠最低消費' },
+  minCostShort: { en: 'spend', zhHant: '洗' },
+  buyN: { en: 'buy', zhHant: '買' },
+  save: { en: 'Save', zhHant: '慳' },
+  spendWiselyTitle: { en: "Don't overspend to save", zhHant: '唔好為慳錢而洗大咗' },
+  spendWiselyBody: {
+    en: 'A lower unit price often needs a bigger basket. Only grab the deal if you will actually use it all.',
+    zhHant: '單價平，通常要買多啲先做到。用得晒先好入手，唔好為咗個「抵」字而洗大咗。',
+  },
+  needBuy: { en: 'need to buy', zhHant: '需買' },
+  vsRegular: { en: 'vs buying one', zhHant: '對比買一件' },
   priceByStore: { en: 'Prices by supermarket', zhHant: '各超市價格' },
   store: { en: 'Store', zhHant: '超市' },
   price: { en: 'Price', zhHant: '價格' },

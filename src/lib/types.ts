@@ -20,6 +20,8 @@ export interface StoreOffer {
   minSpend: number | null;
   discountedTotal: number | null;
   discountedUnitPrice: number | null;
+  /** Minimum outlay to unlock the discounted unit price (the 唔好洗大咗 number). */
+  minCost: number | null;
 }
 
 export interface Product {
@@ -36,6 +38,9 @@ export interface Product {
   minEffectiveUnitPrice: number | null;
   minDiscountedUnitPrice: number | null;
   bestStore: string | null;
+  bestIsDeal: boolean;
+  bestMinQuantity: number | null;
+  bestMinCost: number | null;
 }
 
 export interface CategoryNode {

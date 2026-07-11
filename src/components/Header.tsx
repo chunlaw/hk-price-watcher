@@ -40,14 +40,14 @@ export default function Header({ mode, onToggleMode }: Props) {
           aria-label="language"
         >
           {LANGS.map((l) => (
-            <ToggleButton key={l.key} value={l.key} sx={{ px: 1.2, textTransform: 'none' }}>
-              {l.label}
+            <ToggleButton key={l.key} value={l.key} sx={{ px: { xs: 0.8, sm: 1.2 }, textTransform: 'none' }}>
+              {compact ? l.short : l.label}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
 
         <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
-          <IconButton onClick={onToggleMode} color="inherit" aria-label="toggle color mode">
+          <IconButton onClick={onToggleMode} color="inherit" aria-label="toggle color mode" edge="end">
             {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
           </IconButton>
         </Tooltip>

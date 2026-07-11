@@ -105,15 +105,16 @@ export function digestProduct(raw) {
   const minEffectiveUnitPrice = effUnit.length ? Math.min(...effUnit) : null;
   const minDiscountedUnitPrice = discounted.length ? Math.min(...discounted) : null;
 
-  let bestStore = null;
+  let bestOffer = null;
   let bestVal = Infinity;
   for (const o of offers) {
     const v = o.discountedUnitPrice != null ? o.discountedUnitPrice : o.unitPrice;
     if (v != null && v < bestVal) {
       bestVal = v;
-      bestStore = o.supermarketCode;
+      bestOffer = o;
     }
   }
+  const bestIsDeal = bestOffer != null && bestOffer.discountedUnitPrice != null;
 
   return {
     code,
@@ -128,7 +129,12 @@ export function digestProduct(raw) {
     minPrice,
     minEffectiveUnitPrice,
     minDiscountedUnitPrice,
-    bestStore,
+    bestStore: bestOffer ? bestOffer.supermarketCode : null,
+    // Best-deal summary for the card: to reach the lowest effective unit price,
+    // how much must you buy / spend at minimum.
+    bestIsDeal,
+    bestMinQuantity: bestIsDeal ? bestOffer.minQuantity : null,
+    bestMinCost: bestIsDeal ? bestOffer.minCost : null,
   };
 }
 

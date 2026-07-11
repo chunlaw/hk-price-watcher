@@ -121,7 +121,7 @@ export default function HomePage({ data, embeddings }: Props) {
               {results.length} {t('results')}
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
-            <FormControl size="small" sx={{ minWidth: 180 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: 150, sm: 180 } }}>
               <InputLabel id="sort-label">{t('sortBy')}</InputLabel>
               <Select
                 labelId="sort-label"

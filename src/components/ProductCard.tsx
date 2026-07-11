@@ -42,12 +42,20 @@ export default function ProductCard({ product, onClick }: Props) {
             <Typography variant="h6" color={hasDeal ? 'success.main' : 'text.primary'}>
               {money(product.minEffectiveUnitPrice ?? product.minPrice)}
             </Typography>
+            <Typography variant="caption" color="text.secondary">{t('perUnit')}</Typography>
             {hasDeal && product.minPrice != null && product.minPrice > (product.minDiscountedUnitPrice ?? 0) && (
               <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
                 {money(product.minPrice)}
               </Typography>
             )}
           </Stack>
+
+          {/* "唔好洗大咗": if the best unit price needs buying several, say so up front. */}
+          {product.bestIsDeal && product.bestMinCost != null && (product.bestMinQuantity ?? 0) > 1 && (
+            <Typography variant="caption" color="warning.main">
+              {t('needBuy')} {product.bestMinQuantity} {t('units')} · {t('minCostShort')} {money(product.bestMinCost)}
+            </Typography>
+          )}
 
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             <Chip

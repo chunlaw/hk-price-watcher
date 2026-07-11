@@ -61,9 +61,14 @@ function candidatesFor(text, base) {
   const t = String(text).replace(/\s+/g, ' ').trim();
   const out = [];
   const push = (kind, discountedUnitPrice, extra = {}) => {
-    if (Number.isFinite(discountedUnitPrice) && discountedUnitPrice > 0) {
-      out.push({ kind, minQuantity: null, minSpend: null, discountedTotal: null, discountedUnitPrice, ...extra });
+    if (!(Number.isFinite(discountedUnitPrice) && discountedUnitPrice > 0)) return;
+    const merged = { kind, minQuantity: null, minSpend: null, discountedTotal: null, ...extra, discountedUnitPrice };
+    // discountedTotal doubles as the minimum outlay to obtain the deal. When a
+    // matcher didn't supply it but we know the required quantity, derive it.
+    if (merged.discountedTotal == null && merged.minQuantity != null) {
+      merged.discountedTotal = round2(merged.minQuantity * discountedUnitPrice);
     }
+    out.push(merged);
   };
   const hasBase = base != null && Number.isFinite(base);
   let m;
@@ -243,6 +248,12 @@ export function digestOffer(price, offerEn, offerZh) {
     if (!best || c.discountedUnitPrice < best.discountedUnitPrice) best = c;
   }
 
+  // The minimum you must actually spend to unlock the discounted unit price —
+  // the core of the "唔好為慳錢而洗大咗" (don't overspend to save) idea.
+  const minCost = best
+    ? (best.discountedTotal ?? best.minSpend ?? best.discountedUnitPrice)
+    : null;
+
   return {
     price: base,
     unitPrice: base,
@@ -253,6 +264,7 @@ export function digestOffer(price, offerEn, offerZh) {
     minSpend: best ? best.minSpend : null,
     discountedTotal: best ? best.discountedTotal : null,
     discountedUnitPrice: best ? best.discountedUnitPrice : null,
+    minCost,
   };
 }
 
