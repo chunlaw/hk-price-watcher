@@ -90,11 +90,17 @@ npm run build && npm run preview
 
 ## Deploying to GitHub Pages
 
+The site is served from the custom domain **https://hk-price-watcher.chunlaw.io**.
+
 1. Push to the default branch (`main`).
-2. In **Settings → Pages**, set **Source: GitHub Actions**.
-3. The `deploy` workflow builds the data and publishes to
-   `https://<owner>.github.io/<repo>/`. It re-runs daily (20:00 UTC) and can be
-   triggered manually from the **Actions** tab.
+2. In **Settings → Pages**, set **Source: GitHub Actions**, and set the
+   **Custom domain** to `hk-price-watcher.chunlaw.io` (the `public/CNAME` file
+   already pins this). Enable **Enforce HTTPS** once the certificate is issued.
+3. DNS: a `CNAME` record for `hk-price-watcher` → `chunlaw.github.io`.
+4. The `deploy` workflow builds the data and publishes the site. It re-runs
+   daily (20:00 UTC) and can be triggered manually from the **Actions** tab.
+   The site is built with `BASE_PATH=/` because the custom domain serves from the
+   root. (Without a custom domain, set `BASE_PATH=/hk-price-watcher/`.)
 
 ## Data & disclaimer
 

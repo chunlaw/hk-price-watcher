@@ -61,8 +61,10 @@ jobs:
 
       - name: Build site
         env:
-          # Served from https://<owner>.github.io/<repo>/
-          BASE_PATH: /${{ github.event.repository.name }}/
+          # Served at the root of the custom domain (public/CNAME →
+          # hk-price-watcher.chunlaw.io). If you drop the custom domain and use
+          # the default github.io URL, set this to /${{ github.event.repository.name }}/.
+          BASE_PATH: /
         run: npm run build
 
       - name: Configure Pages
