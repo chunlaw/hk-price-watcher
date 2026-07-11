@@ -1,0 +1,78 @@
+name: Build data & deploy to GitHub Pages
+
+on:
+  # Refresh the data daily. 20:00 UTC = 04:00 Hong Kong time, after the feed's
+  # overnight update.
+  schedule:
+    - cron: '0 20 * * *'
+  # Deploy whenever the site code changes on the default branch.
+  push:
+    branches: [main, master]
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+# Least-privilege permissions needed to publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; a newer run supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Cache the ONNX embedding model between runs so the daily job doesn't
+      # re-download it every time.
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: .cache/transformers
+          key: transformers-${{ hashFiles('scripts/lib/embed-config.mjs') }}
+
+      - name: Record build time
+        run: echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      # Fetch the live Consumer Council feed, digest offers, and precompute the
+      # semantic-search embeddings. Runs entirely on the runner — no paid API.
+      - name: Build data (fetch + digest offers + embeddings)
+        env:
+          TRANSFORMERS_CACHE: ./.cache/transformers
+        run: npm run data:build
+
+      - name: Build site
+        env:
+          # Served from https://<owner>.github.io/<repo>/
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

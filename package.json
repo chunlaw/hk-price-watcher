@@ -1,0 +1,33 @@
+{
+  "name": "hk-price-watcher",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Hong Kong supermarket price watcher with on-device semantic search. Data from the Consumer Council Online Price Watch open data, refreshed daily via GitHub Actions.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "data:mock": "node scripts/gen-mock.mjs",
+    "data:build": "node scripts/build-data.mjs",
+    "data:build:mock": "node scripts/build-data.mjs --source=mock --no-embeddings"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^5.15.20",
+    "@mui/material": "^5.15.20",
+    "@xenova/transformers": "^2.17.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.24.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.2"
+  }
+}

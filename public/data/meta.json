@@ -1,0 +1,11 @@
+{
+  "source": "consumer-council-online-price-watch",
+  "apiUrl": "https://online-price-watch.consumer.org.hk/opw/opendata/pricewatch.json",
+  "generatedAt": null,
+  "productCount": 2580,
+  "supermarketCount": 9,
+  "categoryCount": 10,
+  "offersWithText": 2319,
+  "offersParsed": 2294,
+  "embedding": null
+}
