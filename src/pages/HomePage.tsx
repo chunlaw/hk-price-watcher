@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from 'react';
 import {
   Box, Container, Grid, Typography, Button, Drawer, IconButton, Paper,
   MenuItem, Select, FormControl, InputLabel, useMediaQuery, useTheme, Stack, Fade,
-  CircularProgress, LinearProgress,
+  CircularProgress, LinearProgress, Chip,
 } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useLang } from '../i18n/LangContext';
@@ -31,7 +31,7 @@ const SEM_THRESHOLD = 0.3;
 const SEM_MIN_RESULTS = 12;
 
 export default function HomePage({ data, embeddings }: Props) {
-  const { lang, t } = useLang();
+  const { lang, t, loc } = useLang();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -90,6 +90,33 @@ export default function HomePage({ data, embeddings }: Props) {
   }, [data.products, filters, ranked, semanticAvailable, semanticActive, lang]);
 
   const shown = results.slice(0, visible);
+
+  // Localized labels for the active brand / category filters (shown as removable
+  // chips so the applied tag filter is visible and clearable).
+  const keyOf = (n: { code: string | null; name: { en: string; zhHant: string } }) => n.code ?? n.name.en;
+  const activeCategoryLabel = useMemo(() => {
+    if (!filters.cat1) return null;
+    const c1 = data.facets.categories.find((c) => keyOf(c) === filters.cat1);
+    if (!c1) return null;
+    const parts = [c1.name];
+    if (filters.cat2) {
+      const c2 = c1.children?.find((c) => keyOf(c) === filters.cat2);
+      if (c2) {
+        parts.push(c2.name);
+        if (filters.cat3) {
+          const c3 = c2.children?.find((c) => keyOf(c) === filters.cat3);
+          if (c3) parts.push(c3.name);
+        }
+      }
+    }
+    return parts.map(loc).join(' / ');
+  }, [filters.cat1, filters.cat2, filters.cat3, data.facets.categories, loc]);
+
+  const activeBrandLabel = useMemo(() => {
+    if (!filters.brand) return null;
+    const p = data.products.find((pr) => pr.brand.en === filters.brand || pr.brand.zhHant === filters.brand);
+    return p ? loc(p.brand) : filters.brand;
+  }, [filters.brand, data.products, loc]);
 
   const filtersNode = (
     <FiltersPanel
@@ -150,6 +177,28 @@ export default function HomePage({ data, embeddings }: Props) {
               </Select>
             </FormControl>
           </Box>
+
+          {(activeBrandLabel || activeCategoryLabel) && (
+            <Stack direction="row" spacing={1} sx={{ mb: 1.5, flexWrap: 'wrap' }} useFlexGap alignItems="center">
+              <Typography variant="caption" color="text.secondary">{t('filteredBy')}:</Typography>
+              {activeBrandLabel && (
+                <Chip
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  label={`${t('brand')}: ${activeBrandLabel}`}
+                  onDelete={() => patch({ brand: null })}
+                />
+              )}
+              {activeCategoryLabel && (
+                <Chip
+                  size="small"
+                  label={activeCategoryLabel}
+                  onDelete={() => patch({ cat1: null, cat2: null, cat3: null })}
+                />
+              )}
+            </Stack>
+          )}
 
           {semanticError ? (
             <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
@@ -221,7 +270,14 @@ export default function HomePage({ data, embeddings }: Props) {
         </Box>
       </Drawer>
 
-      <ProductDialog product={selected} onClose={() => setSelected(null)} />
+      <ProductDialog
+        product={selected}
+        onClose={() => setSelected(null)}
+        onFilter={(p) => {
+          patch(p);
+          setSelected(null);
+        }}
+      />
     </Container>
   );
 }

@@ -8,6 +8,7 @@ export interface FilterState {
   cat1: string | null;
   cat2: string | null;
   cat3: string | null;
+  brand: string | null; // canonical brand key (brand.en || brand.zhHant)
   stores: string[]; // supermarket codes; empty = all
   onlyOffers: boolean;
   sort: SortKey;
@@ -19,10 +20,16 @@ export const EMPTY_FILTERS: FilterState = {
   cat1: null,
   cat2: null,
   cat3: null,
+  brand: null,
   stores: [],
   onlyOffers: false,
   sort: 'relevance',
 };
+
+/** Canonical key for a product's brand, used by the brand filter. */
+export function brandKey(brand: { en: string; zhHant: string }): string {
+  return brand.en || brand.zhHant;
+}
 
 function haystack(p: Product): string {
   return [
@@ -40,6 +47,7 @@ export function passesFacets(p: Product, f: FilterState): boolean {
   if (f.cat1 && (p.cat1?.code ?? p.cat1?.name.en) !== f.cat1) return false;
   if (f.cat2 && (p.cat2?.code ?? p.cat2?.name.en) !== f.cat2) return false;
   if (f.cat3 && (p.cat3?.code ?? p.cat3?.name.en) !== f.cat3) return false;
+  if (f.brand && p.brand.en !== f.brand && p.brand.zhHant !== f.brand) return false;
   if (f.onlyOffers && !p.hasAnyOffer) return false;
   if (f.stores.length) {
     const set = new Set(f.stores);

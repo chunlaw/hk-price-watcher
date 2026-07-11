@@ -25,7 +25,7 @@ export default function FiltersPanel({ categories, supermarkets, filters, onChan
   };
 
   const hasActive =
-    filters.cat1 || filters.stores.length || filters.onlyOffers || filters.query;
+    filters.cat1 || filters.brand || filters.stores.length || filters.onlyOffers || filters.query;
 
   return (
     <Stack spacing={2}>

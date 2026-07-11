@@ -9,12 +9,17 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import ShoppingBasketOutlinedIcon from '@mui/icons-material/ShoppingBasketOutlined';
 import { useLang } from '../i18n/LangContext';
 import { money } from '../lib/format';
-import type { Product, StoreOffer } from '../lib/types';
+import { brandKey, type FilterState } from '../lib/search';
+import type { Product, StoreOffer, Category } from '../lib/types';
 
 interface Props {
   product: Product | null;
   onClose: () => void;
+  /** Apply a filter (and close the dialog) when a brand/category tag is clicked. */
+  onFilter: (patch: Partial<FilterState>) => void;
 }
+
+const catKey = (c: Category) => c.code ?? c.name.en;
 
 function effUnit(o: StoreOffer): number | null {
   return o.discountedUnitPrice ?? o.unitPrice;
@@ -119,7 +124,7 @@ function StoreRow({ offer, best }: { offer: StoreOffer; best: boolean }) {
   );
 }
 
-export default function ProductDialog({ product, onClose }: Props) {
+export default function ProductDialog({ product, onClose, onFilter }: Props) {
   const { loc, t } = useLang();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -128,19 +133,50 @@ export default function ProductDialog({ product, onClose }: Props) {
 
   const sorted = [...product.offers].sort((a, b) => (effUnit(a) ?? Infinity) - (effUnit(b) ?? Infinity));
   const bestCode = sorted.find((o) => effUnit(o) != null)?.supermarketCode;
-  const cats = [product.cat1, product.cat2, product.cat3].filter(Boolean);
   const anyMinQty = product.offers.some((o) => o.discountedUnitPrice != null && (o.minQuantity ?? 0) > 1);
+
+  // Clicking a category tag navigates to that category (full path); clicking the
+  // brand tag filters by brand. Both clear the query for a clean browse.
+  const filterToCategory = (level: 1 | 2 | 3) => {
+    const patch: Partial<FilterState> = { query: '', cat1: null, cat2: null, cat3: null };
+    if (product.cat1) patch.cat1 = catKey(product.cat1);
+    if (level >= 2 && product.cat2) patch.cat2 = catKey(product.cat2);
+    if (level >= 3 && product.cat3) patch.cat3 = catKey(product.cat3);
+    onFilter(patch);
+  };
+  const catChips: { level: 1 | 2 | 3; cat: Category }[] = [];
+  if (product.cat1) catChips.push({ level: 1, cat: product.cat1 });
+  if (product.cat2) catChips.push({ level: 2, cat: product.cat2 });
+  if (product.cat3) catChips.push({ level: 3, cat: product.cat3 });
 
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth fullScreen={fullScreen} scroll="paper">
       <DialogTitle sx={{ pr: 6 }}>
         <Typography variant="h6" component="div" sx={{ lineHeight: 1.25 }}>{loc(product.name)}</Typography>
         <Stack direction="row" spacing={0.75} sx={{ mt: 1, flexWrap: 'wrap' }} useFlexGap>
-          {loc(product.brand) && <Chip size="small" variant="outlined" label={loc(product.brand)} />}
-          {cats.map((c, i) => (
-            <Chip key={i} size="small" label={loc(c!.name)} />
+          {loc(product.brand) && (
+            <Chip
+              size="small"
+              variant="outlined"
+              color="primary"
+              clickable
+              onClick={() => onFilter({ query: '', brand: brandKey(product.brand) })}
+              label={loc(product.brand)}
+            />
+          )}
+          {catChips.map(({ level, cat }) => (
+            <Chip
+              key={level}
+              size="small"
+              clickable
+              onClick={() => filterToCategory(level)}
+              label={loc(cat.name)}
+            />
           ))}
         </Stack>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+          {t('tapTagToFilter')}
+        </Typography>
         <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }} aria-label={t('close')}>
           <CloseIcon />
         </IconButton>

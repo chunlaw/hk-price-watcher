@@ -77,6 +77,8 @@ export const STRINGS: Dict = {
   close: { en: 'Close', zhHant: '關閉' },
   brand: { en: 'Brand', zhHant: '品牌' },
   category: { en: 'Category', zhHant: '分類' },
+  tapTagToFilter: { en: 'Tap a brand or category tag to browse similar products', zhHant: '點按品牌或分類標籤即可瀏覽同類產品' },
+  filteredBy: { en: 'Filtered by', zhHant: '篩選' },
   loadMore: { en: 'Load more', zhHant: '載入更多' },
   loading: { en: 'Loading…', zhHant: '載入中…' },
   updated: { en: 'Data updated', zhHant: '資料更新於' },
