@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadModel, embedQuery, rankBySimilarity, type ModelStatus } from '../lib/semantic';
 
 interface Result {
@@ -7,6 +7,8 @@ interface Result {
   status: ModelStatus;
   progress: number;
   querying: boolean;
+  error: string | null;
+  retry: () => void;
 }
 
 /**
@@ -23,6 +25,7 @@ export function useSemantic(
   const [progress, setProgress] = useState(0);
   const [ranked, setRanked] = useState<{ index: number; score: number }[] | null>(null);
   const [querying, setQuerying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const reqId = useRef(0);
 
   const active = enabled && !!embeddings && productCount > 0;
@@ -33,10 +36,20 @@ export function useSemantic(
     if (!active) return;
     if (status !== 'idle') return;
     setStatus('loading');
+    setError(null);
     loadModel((p) => setProgress(p))
       .then(() => setStatus('ready'))
-      .catch(() => setStatus('error'));
+      .catch((e) => {
+        setStatus('error');
+        setError(e instanceof Error ? e.message : String(e));
+      });
   }, [active, status]);
+
+  const retry = useCallback(() => {
+    setStatus('idle');
+    setError(null);
+    setProgress(0);
+  }, []);
 
   // Re-rank when the (debounced) query changes.
   useEffect(() => {
@@ -54,8 +67,10 @@ export function useSemantic(
         const scored = rankBySimilarity(vec, embeddings!, productCount);
         if (id !== reqId.current) return;
         setRanked(scored);
-      } catch {
+      } catch (e) {
         setRanked(null);
+        setStatus('error');
+        setError(e instanceof Error ? e.message : String(e));
       } finally {
         if (id === reqId.current) setQuerying(false);
       }
@@ -63,5 +78,5 @@ export function useSemantic(
     return () => clearTimeout(timer);
   }, [active, q, status, embeddings, productCount]);
 
-  return { ranked: active && q ? ranked : null, status, progress, querying };
+  return { ranked: active && q ? ranked : null, status, progress, querying, error, retry };
 }

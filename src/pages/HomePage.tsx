@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from 'react';
 import {
   Box, Container, Grid, Typography, Button, Drawer, IconButton, Paper,
   MenuItem, Select, FormControl, InputLabel, useMediaQuery, useTheme, Stack, Fade,
+  CircularProgress, LinearProgress,
 } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useLang } from '../i18n/LangContext';
@@ -40,12 +41,19 @@ export default function HomePage({ data, embeddings }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const semanticAvailable = !!embeddings && !!data.meta.embedding;
-  const { ranked, status, progress, querying } = useSemantic(
+  const { ranked, status, progress, querying, error, retry } = useSemantic(
     embeddings,
     data.products.length,
     filters.query,
     filters.semantic && semanticAvailable,
   );
+
+  // When smart search is on with a query but the model isn't ready yet, we must
+  // NOT quietly fall back to keyword search — for non-Latin queries (e.g. Thai)
+  // that would look like "no results". Instead surface the real state.
+  const semanticActive = filters.semantic && semanticAvailable && !!filters.query.trim();
+  const semanticPending = semanticActive && status !== 'error' && !ranked;
+  const semanticError = semanticActive && status === 'error';
 
   const patch = useCallback((p: Partial<FilterState>) => {
     setFilters((f) => ({ ...f, ...p }));
@@ -68,6 +76,10 @@ export default function HomePage({ data, embeddings }: Props) {
         else if (fallback.length < SEM_MIN_RESULTS) fallback.push(p);
       }
       list = passing.length >= SEM_MIN_RESULTS ? passing : [...passing, ...fallback];
+    } else if (semanticActive) {
+      // Smart search is on but the model isn't ready — don't keyword-fall-back
+      // (it would look empty for non-Latin queries). The UI shows a status panel.
+      return [];
     } else {
       list = products.filter((p) => passesFacets(p, filters) && textMatch(p, filters.query));
     }
@@ -75,7 +87,7 @@ export default function HomePage({ data, embeddings }: Props) {
     // For semantic relevance ordering we keep similarity order; otherwise sort.
     if (usingSemantic && filters.sort === 'relevance') return list;
     return sortProducts(list, filters.sort, lang);
-  }, [data.products, filters, ranked, semanticAvailable, lang]);
+  }, [data.products, filters, ranked, semanticAvailable, semanticActive, lang]);
 
   const shown = results.slice(0, visible);
 
@@ -99,6 +111,8 @@ export default function HomePage({ data, embeddings }: Props) {
         modelStatus={status}
         modelProgress={progress}
         querying={querying}
+        modelError={error}
+        onRetry={retry}
       />
 
       <Grid container spacing={2} sx={{ mt: 0.5 }}>
@@ -118,7 +132,7 @@ export default function HomePage({ data, embeddings }: Props) {
               </Button>
             )}
             <Typography variant="body2" color="text.secondary">
-              {results.length} {t('results')}
+              {semanticPending || semanticError ? '' : `${results.length} ${t('results')}`}
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
             <FormControl size="small" sx={{ minWidth: { xs: 150, sm: 180 } }}>
@@ -137,7 +151,30 @@ export default function HomePage({ data, embeddings }: Props) {
             </FormControl>
           </Box>
 
-          {shown.length === 0 ? (
+          {semanticError ? (
+            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="subtitle1" fontWeight={700} gutterBottom>{t('modelErrorTitle')}</Typography>
+              <Typography color="text.secondary" sx={{ mb: 2 }}>{t('modelErrorBody')}</Typography>
+              <Button variant="contained" onClick={retry}>{t('retry')}</Button>
+              {error && (
+                <Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 2, wordBreak: 'break-word' }}>
+                  {error}
+                </Typography>
+              )}
+            </Paper>
+          ) : semanticPending ? (
+            <Paper variant="outlined" sx={{ p: 5, textAlign: 'center' }}>
+              <CircularProgress sx={{ mb: 2 }} />
+              <Typography color="text.secondary">
+                {status === 'loading' ? t('loadingModelBig') : t('embeddingQuery')}
+              </Typography>
+              {status === 'loading' && progress > 0 && (
+                <Box sx={{ maxWidth: 320, mx: 'auto', mt: 2 }}>
+                  <LinearProgress variant="determinate" value={Math.round(progress * 100)} />
+                </Box>
+              )}
+            </Paper>
+          ) : shown.length === 0 ? (
             <Paper variant="outlined" sx={{ p: 6, textAlign: 'center' }}>
               <Typography color="text.secondary">{t('noResults')}</Typography>
               <Button sx={{ mt: 2 }} onClick={() => patch({ ...EMPTY_FILTERS })}>{t('clearFilters')}</Button>

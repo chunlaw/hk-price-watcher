@@ -21,7 +21,21 @@ export const STRINGS: Dict = {
     zhHant: '理解語意而非僅比對關鍵字。首次使用會在裝置下載小型模型（僅一次）。',
   },
   loadingModel: { en: 'Loading search model…', zhHant: '正在載入搜尋模型…' },
+  loadingModelBig: {
+    en: 'Loading the on-device search model (one-time, ~a few MB to tens of MB). This can take a moment on the first use.',
+    zhHant: '正在下載裝置端搜尋模型（僅一次，數 MB 至數十 MB），首次使用需稍候。',
+  },
   embeddingQuery: { en: 'Understanding your query…', zhHant: '正在理解你的查詢…' },
+  modelErrorTitle: { en: 'Smart search could not load', zhHant: '智能搜尋載入失敗' },
+  modelErrorBody: {
+    en: 'The on-device model failed to download (often a slow or blocked network). You can retry, or keep using keyword search.',
+    zhHant: '裝置端模型下載失敗（多數因網絡較慢或被阻擋）。可重試，或改用關鍵字搜尋。',
+  },
+  retry: { en: 'Retry', zhHant: '重試' },
+  multilingualHint: {
+    en: 'Tip: smart search understands many languages (English, 中文, ไทย, …) and matches by meaning.',
+    zhHant: '提示：智能搜尋支援多種語言（English、中文、ไทย…），並以語意配對。',
+  },
   categories: { en: 'Categories', zhHant: '分類' },
   allCategories: { en: 'All categories', zhHant: '所有分類' },
   supermarkets: { en: 'Supermarkets', zhHant: '超市' },

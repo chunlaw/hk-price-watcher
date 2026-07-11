@@ -17,22 +17,28 @@ export type ModelStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
  * Lazily load the embedding model. Safe to call repeatedly; the download+init
- * happens once and is cached by the browser (IndexedDB) for subsequent visits.
+ * happens once and is cached by the browser (Cache Storage) for later visits.
+ * On failure the cached promise is cleared so a later call can retry.
  */
 export function loadModel(onProgress?: (p: number) => void): Promise<FeatureExtractor> {
   if (extractorPromise) return extractorPromise;
   extractorPromise = (async () => {
-    const { pipeline, env } = await import('@xenova/transformers');
-    // Runtime-only model download from the Hugging Face CDN (free, cached
-    // in-browser). No bundling, no server.
-    env.allowLocalModels = false;
-    const pipe = await pipeline('feature-extraction', EMBED_MODEL, {
-      quantized: true,
-      progress_callback: (info: { status?: string; progress?: number }) => {
-        if (onProgress && typeof info.progress === 'number') onProgress(info.progress / 100);
-      },
-    });
-    return pipe as unknown as FeatureExtractor;
+    try {
+      const { pipeline, env } = await import('@xenova/transformers');
+      // Runtime-only model download from the Hugging Face CDN (free, cached
+      // in-browser). No bundling, no server.
+      env.allowLocalModels = false;
+      const pipe = await pipeline('feature-extraction', EMBED_MODEL, {
+        quantized: true,
+        progress_callback: (info: { status?: string; progress?: number }) => {
+          if (onProgress && typeof info.progress === 'number') onProgress(info.progress / 100);
+        },
+      });
+      return pipe as unknown as FeatureExtractor;
+    } catch (err) {
+      extractorPromise = null; // allow a retry
+      throw err;
+    }
   })();
   return extractorPromise;
 }

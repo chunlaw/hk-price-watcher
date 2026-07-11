@@ -1,6 +1,6 @@
 import {
   Paper, InputBase, IconButton, Box, FormControlLabel, Switch,
-  Tooltip, LinearProgress, Typography, Chip,
+  Tooltip, LinearProgress, Typography, Chip, Alert, Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -17,11 +17,13 @@ interface Props {
   modelStatus: ModelStatus;
   modelProgress: number;
   querying: boolean;
+  modelError: string | null;
+  onRetry: () => void;
 }
 
 export default function SearchBar({
   query, onQuery, semantic, onSemantic, semanticAvailable,
-  modelStatus, modelProgress, querying,
+  modelStatus, modelProgress, querying, modelError, onRetry,
 }: Props) {
   const { t } = useLang();
 
@@ -70,6 +72,9 @@ export default function SearchBar({
         {semantic && semanticAvailable && modelStatus === 'ready' && (
           <Chip size="small" color="primary" variant="outlined" label={t('semanticOn')} />
         )}
+        {semantic && semanticAvailable && modelStatus === 'ready' && (
+          <Typography variant="caption" color="text.secondary">{t('multilingualHint')}</Typography>
+        )}
         {querying && <Typography variant="caption" color="text.secondary">{t('embeddingQuery')}</Typography>}
       </Box>
 
@@ -81,6 +86,25 @@ export default function SearchBar({
             value={Math.round(modelProgress * 100)}
           />
         </Box>
+      )}
+
+      {semantic && semanticAvailable && modelStatus === 'error' && (
+        <Alert
+          severity="warning"
+          sx={{ mt: 1 }}
+          action={
+            <Button color="inherit" size="small" onClick={onRetry}>
+              {t('retry')}
+            </Button>
+          }
+        >
+          {t('modelErrorTitle')}
+          {modelError && (
+            <Typography variant="caption" display="block" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+              {modelError}
+            </Typography>
+          )}
+        </Alert>
       )}
     </Box>
   );
