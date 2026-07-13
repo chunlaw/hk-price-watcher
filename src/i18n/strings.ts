@@ -33,8 +33,8 @@ export const STRINGS: Dict = {
   },
   retry: { en: 'Retry', zhHant: '重試' },
   multilingualHint: {
-    en: 'Tip: smart search understands many languages (English, 中文, ไทย, …) and matches by meaning.',
-    zhHant: '提示：智能搜尋支援多種語言（English、中文、ไทย…），並以語意配對。',
+    en: 'Tip: smart search matches by meaning, not just exact keywords (works best in English).',
+    zhHant: '提示：智能搜尋以語意配對，而非只比對關鍵字（英文效果最佳）。',
   },
   categories: { en: 'Categories', zhHant: '分類' },
   allCategories: { en: 'All categories', zhHant: '所有分類' },

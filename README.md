@@ -17,7 +17,11 @@ GitHub Pages — **no server, and no paid API calls**.
   query is embedded **in your browser** with [Transformers.js](https://github.com/xenova/transformers.js)
   and ranked by cosine similarity. The query never leaves your device and no API
   is called. A fast keyword filter is always on; semantic ("Smart search") is an
-  opt-in toggle that lazy-loads a small multilingual model once and caches it.
+  opt-in toggle that lazy-loads a small model (`all-MiniLM-L6-v2`, ~23 MB) once
+  and caches it. That model is English-focused; keyword search covers Traditional
+  Chinese. For multilingual *semantic* search, swap the model in
+  `scripts/lib/embed-config.mjs` (and its mirror `src/lib/embedConfig.ts`) for a
+  multilingual one such as `Xenova/paraphrase-multilingual-MiniLM-L12-v2`.
 - **Category browsing** — the feed's 3-level category tree (with live counts),
   plus supermarket and "on offer only" filters.
 - **Digested offers** — free-text promotions ("Buy 2 to save $4.00",
@@ -44,7 +48,7 @@ embed each product ──────▶ public/data/embeddings.bin ─▶ cosin
   (Transformers.js, CPU)                                  query embedding
 ```
 
-The embedding model (`Xenova/paraphrase-multilingual-MiniLM-L12-v2`, 384-dim) is
+The embedding model (`Xenova/all-MiniLM-L6-v2`, 384-dim) is
 declared once in `scripts/lib/embed-config.mjs` and mirrored in
 `src/lib/embedConfig.ts`. The **same** model is used to precompute product
 vectors (CI) and to embed the query (browser), so the two live in the same space.
